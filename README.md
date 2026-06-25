@@ -154,3 +154,14 @@ Add screenshots here.
 - Skill recommendation engine
 - Mobile application
 - Advanced analytics
+
+  ---
+  ## Additional Documentation
+
+For detailed project documentation, refer to:
+
+- [Project Overview](docs/PROJECT_OVERVIEW.md)
+- [Development Guide](docs/DEVELOPMENT_GUIDE.md)
+- [Setup Guide](docs/SETUP_GUIDE.md)
+- [Use Cases](docs/USE_CASES.md)
+- [Development Checklist](docs/CHECKLIST.md)
