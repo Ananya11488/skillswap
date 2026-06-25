@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Sessions - SkillSwap</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav {
+            background-color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 2rem;
+        }
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 2rem;
+        }
+        .session-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr auto;
+            gap: 2rem;
+            align-items: center;
+        }
+        .session-info h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        .session-info p {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+        .status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+        .status-scheduled {
+            background-color: #cfe2ff;
+            color: #084298;
+        }
+        .status-completed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-right: 0.5rem;
+        }
+        .btn:hover {
+            background-color: #764ba2;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .skill-block {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 1rem 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .skill-block h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        .skill-meta {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.75rem;
+        }
+        .mentee-list {
+            margin: 0;
+            padding-left: 1.2rem;
+            color: #333;
+        }
+        .mentee-list li {
+            margin-bottom: 0.4rem;
+        }
+        .star-rating {
+            direction: rtl;
+            display: inline-flex;
+            gap: 0.15rem;
+            margin-left: 0.4rem;
+            vertical-align: middle;
+        }
+        .star-rating input {
+            display: none;
+        }
+        .star-rating label {
+            font-size: 1.5rem;
+            color: #ccc;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input:checked ~ label {
+            color: #f4b400;
+        }
+        .bell-link {
+            position: relative;
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        .bell-badge {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background: #ff4d4f;
+            color: #fff;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            min-width: 18px;
+            text-align: center;
+            padding: 1px 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>My Sessions</h1>
+        <a href="/notifications" class="bell-link" title="Notifications">🔔
+            <span class="bell-badge" th:text="${unreadCount}">0</span>
+        </a>
+    </header>
+    
+    <nav>
+        <a href="/dashboard">Home</a>
+        <a href="/skills/catalog">Skills</a>
+        <a href="/requests/my-requests">Requests</a>
+        <a href="/sessions/my-sessions">Sessions</a>
+        <a href="/notifications">Notifications</a>
+        <a href="/auth/logout">Logout</a>
+    </nav>
+
+    <div class="container">
+        <div th:if="${currentUser != null and currentUser.role.name() == 'MENTOR'}" style="margin-bottom: 1rem;">
+            <a href="/sessions/my-sessions/new-skill" class="btn">Create Skill</a>
+        </div>
+
+        <div th:if="${currentUser != null and currentUser.role.name() == 'MENTOR'}" style="margin-bottom: 1.25rem;">
+            <h2 style="margin-bottom: 0.9rem; color:#333;">Skills I am giving</h2>
+            <div th:if="${mentorSkillGroups == null or mentorSkillGroups.isEmpty()}" class="skill-block">
+                No mentees have requested your skills yet.
+            </div>
+            <div th:each="entry : ${mentorSkillGroups}" class="skill-block">
+                <h3 th:text="${entry.key.skillName}">Skill Name</h3>
+                <div class="skill-meta">
+                    Categories:
+                    <span th:text="${entry.key.categoriesDisplay}">Category</span>
+                </div>
+                <div class="skill-meta">
+                    Total mentee requests: <strong th:text="${entry.value.size()}">0</strong>
+                </div>
+                <a th:href="@{/sessions/my-sessions/skill/{id}(id=${entry.key.skillId})}" class="btn">View Mentees</a>
+                <form th:action="@{/sessions/my-sessions/skill/{id}/delete(id=${entry.key.skillId})}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-danger">Delete Skill</button>
+                </form>
+            </div>
+        </div>
+
+        <div th:if="${currentUser != null and currentUser.role.name() == 'MENTEE'}" style="margin-bottom: 1.25rem;">
+            <h2 style="margin-bottom: 0.9rem; color:#333;">Skills I registered for</h2>
+            <div th:if="${menteeSkillRequests == null or menteeSkillRequests.isEmpty()}" class="skill-block">
+                You have not registered for any skills yet.
+            </div>
+            <div th:each="req : ${menteeSkillRequests}" class="skill-block">
+                <h3 th:text="${req.skillToLearn.skillName}">Skill Name</h3>
+                <div class="skill-meta">
+                    Mentor:
+                    <span th:text="${req.mentor.firstName + ' ' + req.mentor.lastName}">Mentor Name</span>
+                    <a th:if="${req.status.name() == 'ACCEPTED' or req.status.name() == 'COMPLETED'}"
+                       th:href="@{/requests/{id}/chat(id=${req.requestId})}"
+                       class="btn"
+                       style="margin-left: .6rem; padding: .3rem .7rem;">
+                        Chat
+                    </a>
+                </div>
+                <div class="skill-meta">
+                    Status:
+                    <strong th:text="${req.status}">PROPOSED</strong>
+                </div>
+                <div class="skill-meta" th:if="${sessionByRequestId != null and sessionByRequestId[req.requestId] != null}">
+                    Proposed slot:
+                    <strong th:text="${#temporals.format(sessionByRequestId[req.requestId].scheduledStart, 'dd-MMM-yyyy HH:mm')}">Start</strong>
+                    -
+                    <strong th:text="${#temporals.format(sessionByRequestId[req.requestId].scheduledEnd, 'HH:mm')}">End</strong>
+                    •
+                    <strong th:text="${sessionByRequestId[req.requestId].sessionMode == T(com.skillswap.entity.Session.SessionMode).VIDEO_VISIT ? 'Video Visit' : 'In Person'}">In Person</strong>
+                    (<span th:text="${sessionByRequestId[req.requestId].status}">PENDING_MENTEE_CONFIRMATION</span>)
+                </div>
+                <div th:if="${sessionByRequestId != null and sessionByRequestId[req.requestId] != null and sessionByRequestId[req.requestId].status.name() == 'PENDING_MENTEE_CONFIRMATION'}" style="margin-top: .5rem;">
+                    <form th:action="@{/sessions/my-sessions/slot/{id}/accept(id=${sessionByRequestId[req.requestId].sessionId})}" method="post" style="display:inline;">
+                        <button type="submit" class="btn">Accept Slot</button>
+                    </form>
+                    <form th:action="@{/sessions/my-sessions/slot/{id}/reject(id=${sessionByRequestId[req.requestId].sessionId})}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-danger">Reject Slot</button>
+                    </form>
+                </div>
+                <div class="skill-meta">
+                    Community mentor rating:
+                    <strong th:text="${#numbers.formatDecimal(averageRatingsByRequest[req.requestId],1,1)} + ' / 5'">0.0 / 5</strong>
+                </div>
+                <div th:if="${req.status.name() == 'ACCEPTED' or req.status.name() == 'COMPLETED'}" style="margin-top: 0.6rem;">
+                    <form method="post" action="/sessions/rate-mentor">
+                        <input type="hidden" name="requestId" th:value="${req.requestId}" />
+                        <label style="font-weight:600;">Rate Mentor:</label>
+                        <div class="star-rating">
+                            <input th:id="'star5-' + ${req.requestId}" type="radio" name="rating" value="5" required />
+                            <label th:for="'star5-' + ${req.requestId}" title="5 stars">&#9733;</label>
+
+                            <input th:id="'star4-' + ${req.requestId}" type="radio" name="rating" value="4" />
+                            <label th:for="'star4-' + ${req.requestId}" title="4 stars">&#9733;</label>
+
+                            <input th:id="'star3-' + ${req.requestId}" type="radio" name="rating" value="3" />
+                            <label th:for="'star3-' + ${req.requestId}" title="3 stars">&#9733;</label>
+
+                            <input th:id="'star2-' + ${req.requestId}" type="radio" name="rating" value="2" />
+                            <label th:for="'star2-' + ${req.requestId}" title="2 stars">&#9733;</label>
+
+                            <input th:id="'star1-' + ${req.requestId}" type="radio" name="rating" value="1" />
+                            <label th:for="'star1-' + ${req.requestId}" title="1 star">&#9733;</label>
+                        </div>
+                        <input type="text" name="comment" placeholder="Optional comment" style="margin-left: .4rem; padding: .35rem;" />
+                        <button type="submit" class="btn">Submit Rating</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <h2 style="margin-bottom: 0.9rem; color:#333;">Scheduled sessions</h2>
+        <div th:each="sess : ${sessions}">
+            <div class="session-card">
+                <div class="session-info">
+                    <h3>Session with <span th:text="${sess.mentor.firstName}">Name</span></h3>
+                    <p><strong>Start:</strong> <span th:text="${#temporals.format(sess.scheduledStart, 'dd-MMM-yyyy HH:mm')}">Date</span></p>
+                    <p><strong>End:</strong> <span th:text="${#temporals.format(sess.scheduledEnd, 'dd-MMM-yyyy HH:mm')}">Date</span></p>
+                    <p><strong>Mode:</strong> <span th:text="${sess.sessionMode == T(com.skillswap.entity.Session.SessionMode).VIDEO_VISIT ? 'Video Visit' : 'In Person'}">In Person</span></p>
+                </div>
+                <div>
+                    <span class="status" 
+                          th:class="'status ' + 'status-' + ${sess.status.toString().toLowerCase()}"
+                          th:text="${sess.status}">Status</span>
+                </div>
+                <div>
+                    <a th:href="@{/sessions/{id}(id=${sess.sessionId})}" class="btn">View</a>
+                    <th:block th:if="${sess.status.name() == 'SCHEDULED'}">
+                        <form th:action="@{/sessions/{id}/complete(id=${sess.sessionId})}" method="post" style="display:inline;">
+                            <button type="submit" class="btn">Complete</button>
+                        </form>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${sessions.isEmpty()}" style="text-align: center; padding: 2rem;">
+            <p>No upcoming sessions. <a href="/requests/new">Request a session</a></p>
+        </div>
+    </div>
+</body>
+</html>
